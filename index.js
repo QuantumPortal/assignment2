@@ -49,7 +49,7 @@ app.use(session({
 ));
 
 app.get('/', (req,res) => {
-    res.send("<h1>Hello World!</h1>");
+    res.send("<h1>Hello World!</h1> <a href='login'>Log in</a>");
 });
 
 app.get('/nosql-injection', async (req,res) => {
@@ -135,6 +135,8 @@ app.get('/login', (req,res) => {
     <input name='password' type='password' placeholder='password'>
     <button>Submit</button>
     </form>
+    <br>
+    <a href='createUser'> don't have an accout? make one! </a>
     `;
     res.send(html);
 });
@@ -161,7 +163,7 @@ app.post('/submitUser', async (req,res) => {
 	await userCollection.insertOne({username: username, password: hashedPassword});
 	console.log("Inserted user");
 
-    var html = "successfully created user";
+    var html = "successfully created user <br> <a href='login'> return to log in </a>";
     res.send(html);
 });
 
@@ -207,6 +209,7 @@ app.get('/loggedin', (req,res) => {
     }
     var html = `
     You are logged in!
+    <a href='cat/${Math.floor(Math.random()*2)+1}'> visit super secret cat page?</a>
     `;
     res.send(html);
 });
@@ -221,14 +224,17 @@ app.get('/logout', (req,res) => {
 
 
 app.get('/cat/:id', (req,res) => {
+    if (!req.session.authenticated) {
+        res.redirect('/login');
+    }
 
     var cat = req.params.id;
 
     if (cat == 1) {
-        res.send("Fluffy: <img src='/fluffy.gif' style='width:250px;'>");
+        res.send(`Fluffy: <img src='/fluffy.gif' style='width:250px;'><br><a href='/cat/${Math.floor(Math.random()*2)+1}'> another cat?</a>`);
     }
     else if (cat == 2) {
-        res.send("Socks: <img src='/socks.gif' style='width:250px;'>");
+        res.send(`Socks: <img src='/socks.gif' style='width:250px;'><br><a href='/cat/${Math.floor(Math.random()*2)+1}'> another cat?</a>`);
     }
     else {
         res.send("Invalid cat id: "+cat);
