@@ -1,0 +1,31 @@
+<%- include('partials/links') %>
+
+<body class="text-center">
+    <div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+     
+     
+    <%- include('partials/header') %>
+    <main role="main" class="inner cover">
+        <h1 class="cover-heading">Assignment 2</h1>
+        <p class="lead">Welcome to my Assignment 2 for 2537!</p>
+        <p class="lead"></p>
+        <p>
+          <% if (loggedin) { %>
+            Welcome back <%= username %>
+          <% } else { %>
+            <a href="/login" class="btn btn-lg btn-secondary">Log in</a>
+          <% } %>
+        </p>
+        
+        
+        
+      </main>
+    
+
+    <%- include('partials/footer') %>
+</div>
+
+
+<%- include('partials/scripts') %>
+</body>
+

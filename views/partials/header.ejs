@@ -1,0 +1,12 @@
+
+<header class="masthead mb-auto">
+    <div class="inner">
+        <h3 class="masthead-brand">Assignment 2</h3>
+        <nav class="nav nav-masthead justify-content-center">
+
+            <% for(var i=0; i<tabs.length; i++) { %>
+                <a class="nav-link<%= current == tabs[i].link ? ' active' : ''%>" href="<%= tabs[i].link%>"><%= tabs[i].name%></a>
+            <% } %>
+        </nav>
+    </div>
+</header>

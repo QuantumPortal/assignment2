@@ -1,0 +1,32 @@
+<%- include('partials/links') %>
+
+<body class="text-center">
+    <div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+     
+     
+    <%- include('partials/header') %>
+    <form action="/submitUser" method="post">
+        <!-- Email input -->
+        <div data-mdb-input-init class="form-outline mb-4">
+          <input name="username" type="text" id="form2Example1" class="form-control" />
+          <label  lass="form-label" for="form2Example1">Username</label>
+        </div>
+      
+        <!-- Password input -->
+        <div data-mdb-input-init class="form-outline mb-4">
+          <input name="password" type="password" id="form2Example2" class="form-control" />
+          <label class="form-label" for="form2Example2">Password</label>
+        </div>
+
+      
+        <!-- Submit button -->
+        <button type="submit" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block mb-4">Create Account</button>
+      </form>
+    
+
+    <%- include('partials/footer') %>
+</div>
+
+<%- include('partials/scripts') %>
+</body>
+

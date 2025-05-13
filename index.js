@@ -9,13 +9,14 @@ const bcrypt = require('bcrypt');
 const saltRounds = 12;
 
 const port = process.env.PORT || 3000;
-
+const ejs = require("ejs");
 const app = express();
-
 const Joi = require("joi");
 
+app.set('view engine', 'ejs');
 
-const expireTime = 24 * 60 * 60 * 1000; //expires after 1 day  (hours * minutes * seconds * millis)
+
+const expireTime = 60 * 60 * 1000; //expires after 1 hour  (minutes * seconds * millis)
 
 /* secret information section */
 const mongodb_host = process.env.MONGODB_HOST;
@@ -48,9 +49,86 @@ app.use(session({
 }
 ));
 
+
+const tabsBase = [{name: 'Home', link: '/'}, {name: 'Members', link: '/members'}, {name: 'Admin', link: '/admin'}];
+
 app.get('/', (req,res) => {
-    res.send("<h1>Hello World!</h1> <a href='login'>Log in</a>");
+    res.render('index', {current: '/', tabs: tabsBase, scripts: [], loggedin: req.session.authenticated ? true : false, username: req.session.username ? req.session.username : ""});
 });
+
+
+
+app.get('/login', (req,res) => {
+    res.render('login', {current: '/login', tabs: tabsBase, scripts: []})
+})
+
+app.get('/signup', (req,res) => {
+
+    res.render('signup', {current: '/signup', tabs: tabsBase, scripts: []})
+    
+});
+
+app.get('/members', (req,res) => {
+    if (!req.session.authenticated) {
+        res.redirect('/login');
+    }
+
+    res.render('members', {current: '/members', tabs: tabsBase, scripts: []})
+})
+
+app.get('/admin', async (req,res) => {
+    if (!req.session.authenticated) {
+        res.redirect('/login');
+    }
+
+    const result = await userCollection.find({username: req.session.username}).project({username: 1, admin:1, password: 1, _id: 1}).toArray();
+    if (!result[0].admin) {
+        res.status(403).render('403');
+    } else {
+        const users = await userCollection.find().toArray();
+        res.render('admin', {current: '/admin', tabs: tabsBase, scripts: [], users: users})
+    }
+
+    
+})
+
+
+
+const { ObjectId } = require('mongodb');
+
+app.get('/promote/:id', async (req, res) => {
+    if (!req.session.authenticated) {
+        res.redirect('/login');
+    }
+
+    const result = await userCollection.find({username: req.session.username}).project({username: 1, admin:1, password: 1, _id: 1}).toArray();
+    if (!result[0].admin) {
+        res.status(403).render('403');
+    } else {
+  await userCollection.updateOne(
+    { _id: new ObjectId(req.params.id) },
+    { $set: { admin: true } }
+  );
+  res.redirect('/admin');}
+});
+
+app.get('/demote/:id', async (req, res) => {
+    if (!req.session.authenticated) {
+        res.redirect('/login');
+    }
+
+    const result = await userCollection.find({username: req.session.username}).project({username: 1, admin:1, password: 1, _id: 1}).toArray();
+    if (!result[0].admin) {
+        res.status(403).render('403');
+    } else {
+  await userCollection.updateOne(
+    { _id: new ObjectId(req.params.id) },
+    { $set: { admin: false } }
+  );
+  res.redirect('/admin');}
+});
+
+
 
 app.get('/nosql-injection', async (req,res) => {
 	var username = req.query.user;
@@ -81,6 +159,8 @@ app.get('/nosql-injection', async (req,res) => {
 
     res.send(`<h1>Hello ${username}</h1>`);
 });
+
+
 
 app.get('/about', (req,res) => {
     var color = req.query.color;
@@ -114,32 +194,7 @@ app.post('/submitEmail', (req,res) => {
 });
 
 
-app.get('/createUser', (req,res) => {
-    var html = `
-    create user
-    <form action='/submitUser' method='post'>
-    <input name='username' type='text' placeholder='username'>
-    <input name='password' type='password' placeholder='password'>
-    <button>Submit</button>
-    </form>
-    `;
-    res.send(html);
-});
 
-
-app.get('/login', (req,res) => {
-    var html = `
-    log in
-    <form action='/loggingin' method='post'>
-    <input name='username' type='text' placeholder='username'>
-    <input name='password' type='password' placeholder='password'>
-    <button>Submit</button>
-    </form>
-    <br>
-    <a href='createUser'> don't have an accout? make one! </a>
-    `;
-    res.send(html);
-});
 
 app.post('/submitUser', async (req,res) => {
     var username = req.body.username;
@@ -160,11 +215,10 @@ app.post('/submitUser', async (req,res) => {
 
     var hashedPassword = await bcrypt.hash(password, saltRounds);
 	
-	await userCollection.insertOne({username: username, password: hashedPassword});
+	await userCollection.insertOne({username: username, password: hashedPassword, admin: false});
 	console.log("Inserted user");
 
-    var html = "successfully created user <br> <a href='login'> return to log in </a>";
-    res.send(html);
+    res.render('success', {current: '/success', tabs: [{name: 'Home', link: '/'}, {name: 'Members', link: '/members'}], scripts: []})
 });
 
 app.post('/loggingin', async (req,res) => {
@@ -193,7 +247,7 @@ app.post('/loggingin', async (req,res) => {
 		req.session.username = username;
 		req.session.cookie.maxAge = expireTime;
 
-		res.redirect('/loggedIn');
+		res.redirect('/members');
 		return;
 	}
 	else {
@@ -241,6 +295,9 @@ app.get('/cat/:id', (req,res) => {
     }
 });
 
+app.use((req, res) => {
+    res.status(404).render('404', { url: req.originalUrl, current: '/404', tabs: [{name: 'Home', link: '/'}, {name: 'Members', link: '/members'}], scripts: []});
+  });
 
 app.use(express.static(__dirname + "/public"));
 
