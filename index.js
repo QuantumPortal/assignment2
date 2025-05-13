@@ -82,7 +82,7 @@ app.get('/admin', async (req,res) => {
     }
 
     const result = await userCollection.find({username: req.session.username}).project({username: 1, admin:1, password: 1, _id: 1}).toArray();
-    if (!result || !result[0].admin) {
+    if (!result || !result[0] || !result[0].admin) {
         res.status(403).render('403');
     } else {
         const users = await userCollection.find().toArray();
@@ -102,7 +102,7 @@ app.get('/promote/:id', async (req, res) => {
     }
 
     const result = await userCollection.find({username: req.session.username}).project({username: 1, admin:1, password: 1, _id: 1}).toArray();
-    if (!result[0].admin) {
+    if (!result || !result[0] || !result[0].admin) {
         res.status(403).render('403');
     } else {
   await userCollection.updateOne(
@@ -118,7 +118,7 @@ app.get('/demote/:id', async (req, res) => {
     }
 
     const result = await userCollection.find({username: req.session.username}).project({username: 1, admin:1, password: 1, _id: 1}).toArray();
-    if (!result[0].admin) {
+    if (!result || !result[0] || !result[0].admin) {
         res.status(403).render('403');
     } else {
   await userCollection.updateOne(
